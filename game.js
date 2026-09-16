@@ -1,5 +1,10 @@
 import { saveScore, loadLeaderboard } from "./leaderboard.js";
 
+
+// =====================================================
+// CANVAS
+// =====================================================
+
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -56,19 +61,21 @@ let gameStarted = false;
 
 let gameOver = false;
 
+
+// =====================================================
+// SPAWN SETTINGS
+// =====================================================
+
 let spawnTime = 900;
 
 let spawnTimer = null;
 
 
-// =====================================================
-// DIFFICULTY CONTROL
-// =====================================================
+// Difficulty milestones
 
-// This prevents the difficulty from triggering
-// repeatedly at the same score.
+let nextSpeedScore = 10;
 
-let nextDifficultyScore = 20;
+let nextSpawnScore = 20;
 
 
 // =====================================================
@@ -91,25 +98,31 @@ let flash = 0;
 const keys = {};
 
 
-// Keyboard down
+// =====================================================
+// KEYBOARD DOWN
+// =====================================================
+
 document.addEventListener("keydown", e => {
 
     keys[e.key] = true;
 
     if (
-        [
-            "ArrowLeft",
-            "ArrowRight",
-            " "
-        ].includes(e.key)
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight" ||
+        e.key === " "
     ) {
+
         e.preventDefault();
+
     }
 
 });
 
 
-// Keyboard up
+// =====================================================
+// KEYBOARD UP
+// =====================================================
+
 document.addEventListener("keyup", e => {
 
     keys[e.key] = false;
@@ -118,7 +131,7 @@ document.addEventListener("keyup", e => {
 
 
 // =====================================================
-// MUSIC
+// START MUSIC
 // =====================================================
 
 function startMusic() {
@@ -139,7 +152,7 @@ function createObject() {
     }
 
 
-    const object = {
+    objects.push({
 
         x: Math.random() * 360,
 
@@ -154,16 +167,13 @@ function createObject() {
 
         caught: false
 
-    };
-
-
-    objects.push(object);
+    });
 
 }
 
 
 // =====================================================
-// START SPAWNING
+// START OBJECT SPAWNING
 // =====================================================
 
 function startSpawning() {
@@ -237,7 +247,9 @@ function showStartScreen() {
 
 
     if (oldScreen) {
+
         oldScreen.remove();
+
     }
 
 
@@ -305,23 +317,39 @@ function startGame() {
     gameOver = false;
 
 
+    // Reset score
+
     score = 0;
+
+
+    // Reset lives
 
     lives = 3;
 
+
+    // Reset speed
+
     fallSpeed = 3;
+
+
+    // Reset spawn speed
 
     spawnTime = 900;
 
 
-    // IMPORTANT:
-    // Difficulty will increase at 20,
-    // then 40, then 60, etc.
+    // Reset difficulty milestones
 
-    nextDifficultyScore = 20;
+    nextSpeedScore = 10;
 
+    nextSpawnScore = 20;
+
+
+    // Clear objects
 
     objects = [];
+
+
+    // Clear effects
 
     particles = [];
 
@@ -332,8 +360,12 @@ function startGame() {
     flash = 0;
 
 
+    // Reset player
+
     player.x = 150;
 
+
+    // Remove start screen
 
     const startScreen =
         document.getElementById(
@@ -342,11 +374,18 @@ function startGame() {
 
 
     if (startScreen) {
+
         startScreen.remove();
+
     }
 
 
+    // Start music
+
     startMusic();
+
+
+    // Start falling objects
 
     startSpawning();
 
@@ -404,7 +443,7 @@ function update() {
 
 
     // =================================================
-    // BASKET POSITION
+    // BASKET
     // =================================================
 
     const basket = {
@@ -421,7 +460,7 @@ function update() {
 
 
     // =================================================
-    // FALLING OBJECTS
+    // UPDATE FALLING OBJECTS
     // =================================================
 
     objects.forEach(obj => {
@@ -429,9 +468,9 @@ function update() {
         obj.y += fallSpeed;
 
 
-        // ---------------------------------------------
-        // COLLISION WITH BASKET
-        // ---------------------------------------------
+        // =================================================
+        // COLLISION
+        // =================================================
 
         if (
 
@@ -460,9 +499,9 @@ function update() {
         ) {
 
 
-            // -----------------------------------------
+            // =============================================
             // EGG CAUGHT
-            // -----------------------------------------
+            // =============================================
 
             if (obj.type === "egg") {
 
@@ -485,9 +524,9 @@ function update() {
             }
 
 
-            // -----------------------------------------
+            // =============================================
             // BOMB CAUGHT
-            // -----------------------------------------
+            // =============================================
 
             if (obj.type === "bomb") {
 
@@ -513,14 +552,15 @@ function update() {
 
 
         // =================================================
-        // OBJECT MISSED BOTTOM
+        // OBJECT REACHED BOTTOM
         // =================================================
 
         if (
             obj.y > canvas.height
         ) {
 
-            // Missing an egg costs a life
+
+            // Missing an egg = lose life
 
             if (obj.type === "egg") {
 
@@ -533,7 +573,8 @@ function update() {
             }
 
 
-            // Missing a bomb does nothing
+            // Missing a bomb = nothing
+
 
             obj.caught = true;
 
@@ -542,7 +583,7 @@ function update() {
     });
 
 
-    // Remove caught/missed objects
+    // Remove caught objects
 
     objects =
         objects.filter(
@@ -551,34 +592,37 @@ function update() {
 
 
     // =================================================
-    // FALL SPEED
+    // SPEED INCREASE EVERY 10 SCORE
     // =================================================
-
-    fallSpeed =
-        3 +
-        score * 0.12;
-
-
-    // =================================================
-    // DIFFICULTY INCREASE
-    // =================================================
-
-    // IMPORTANT FIX:
-    //
-    // The difficulty increases ONLY ONCE when
-    // the player reaches 20, 40, 60, etc.
-    //
-    // It no longer repeatedly resets the timer
-    // every frame.
 
     if (
-        score >= nextDifficultyScore
+        score >= nextSpeedScore
+    ) {
+
+        // Increase speed by 1.2
+
+        fallSpeed += 1.2;
+
+
+        // Next speed milestone
+
+        nextSpeedScore += 10;
+
+    }
+
+
+    // =================================================
+    // SPAWN FASTER EVERY 20 SCORE
+    // =================================================
+
+    if (
+        score >= nextSpawnScore
     ) {
 
         spawnTime -= 100;
 
 
-        // Minimum spawn time
+        // Minimum spawn interval
 
         if (spawnTime < 300) {
 
@@ -587,12 +631,12 @@ function update() {
         }
 
 
-        // Move to the next difficulty level
+        // Next spawn milestone
 
-        nextDifficultyScore += 20;
+        nextSpawnScore += 20;
 
 
-        // Restart the spawning timer ONCE
+        // Restart spawning timer ONCE
 
         startSpawning();
 
@@ -677,7 +721,9 @@ function update() {
 function endGame() {
 
     if (gameOver) {
+
         return;
+
     }
 
 
@@ -702,7 +748,7 @@ function endGame() {
 
 
 // =====================================================
-// DRAW GAME
+// DRAW
 // =====================================================
 
 function draw() {
@@ -806,7 +852,7 @@ function draw() {
 
 
     // =================================================
-    // FRIEND IMAGE
+    // FRIEND
     // =================================================
 
     if (friend.complete) {
@@ -837,10 +883,15 @@ function draw() {
         ctx.fillStyle = "yellow";
 
         ctx.fillRect(
+
             p.x,
+
             p.y,
+
             p.size,
+
             p.size
+
         );
 
     });
@@ -857,9 +908,13 @@ function draw() {
         ctx.font = "30px Arial";
 
         ctx.fillText(
+
             t.text,
+
             t.x,
+
             t.y
+
         );
 
     });
@@ -874,11 +929,17 @@ function draw() {
         ctx.fillStyle =
             "rgba(255,0,0,0.3)";
 
+
         ctx.fillRect(
+
             0,
+
             0,
+
             canvas.width,
+
             canvas.height
+
         );
 
     }
@@ -909,7 +970,9 @@ function showGameOverPanel() {
 
 
     if (oldPanel) {
+
         oldPanel.remove();
+
     }
 
 
@@ -927,6 +990,7 @@ function showGameOverPanel() {
             <h2>
                 💥 GAME OVER 💥
             </h2>
+
 
             <p>
 
@@ -1094,7 +1158,9 @@ function restart() {
 
     // Reset difficulty
 
-    nextDifficultyScore = 20;
+    nextSpeedScore = 10;
+
+    nextSpawnScore = 20;
 
 
     objects = [];
