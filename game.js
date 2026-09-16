@@ -45,15 +45,30 @@ const player = {
 // =====================================================
 
 let objects = [];
+
 let score = 0;
+
 let lives = 3;
+
 let fallSpeed = 3;
 
 let gameStarted = false;
+
 let gameOver = false;
 
 let spawnTime = 900;
+
 let spawnTimer = null;
+
+
+// =====================================================
+// DIFFICULTY CONTROL
+// =====================================================
+
+// This prevents the difficulty from triggering
+// repeatedly at the same score.
+
+let nextDifficultyScore = 20;
 
 
 // =====================================================
@@ -61,9 +76,11 @@ let spawnTimer = null;
 // =====================================================
 
 let particles = [];
+
 let texts = [];
 
 let shake = 0;
+
 let flash = 0;
 
 
@@ -73,55 +90,86 @@ let flash = 0;
 
 const keys = {};
 
+
+// Keyboard down
 document.addEventListener("keydown", e => {
+
     keys[e.key] = true;
 
     if (
-        ["ArrowLeft", "ArrowRight", " "].includes(e.key)
+        [
+            "ArrowLeft",
+            "ArrowRight",
+            " "
+        ].includes(e.key)
     ) {
         e.preventDefault();
     }
+
 });
 
+
+// Keyboard up
 document.addEventListener("keyup", e => {
+
     keys[e.key] = false;
+
 });
 
 
 // =====================================================
-// START MUSIC
+// MUSIC
 // =====================================================
 
 function startMusic() {
+
     music.play().catch(() => {});
+
 }
 
 
 // =====================================================
-// CREATE OBJECT
+// CREATE FALLING OBJECT
 // =====================================================
 
 function createObject() {
 
-    if (!gameStarted || gameOver) return;
+    if (!gameStarted || gameOver) {
+        return;
+    }
 
-    objects.push({
+
+    const object = {
+
         x: Math.random() * 360,
+
         y: -40,
+
         size: 35,
-        type: Math.random() < 0.75 ? "egg" : "bomb",
+
+        type:
+            Math.random() < 0.75
+                ? "egg"
+                : "bomb",
+
         caught: false
-    });
+
+    };
+
+
+    objects.push(object);
+
 }
 
 
 // =====================================================
-// START OBJECT SPAWNING
+// START SPAWNING
 // =====================================================
 
 function startSpawning() {
 
     clearInterval(spawnTimer);
+
 
     spawnTimer = setInterval(
         createObject,
@@ -132,7 +180,7 @@ function startSpawning() {
 
 
 // =====================================================
-// EFFECT
+// CREATE EFFECT
 // =====================================================
 
 function createEffect(x, y, text) {
@@ -140,22 +188,39 @@ function createEffect(x, y, text) {
     for (let i = 0; i < 10; i++) {
 
         particles.push({
-            x,
-            y,
-            size: Math.random() * 5 + 2,
-            speedX: (Math.random() - 0.5) * 5,
-            speedY: (Math.random() - 0.5) * 5,
+
+            x: x,
+
+            y: y,
+
+            size:
+                Math.random() * 5 + 2,
+
+            speedX:
+                (Math.random() - 0.5) * 5,
+
+            speedY:
+                (Math.random() - 0.5) * 5,
+
             life: 30
+
         });
 
     }
 
+
     texts.push({
-        x,
-        y,
-        text,
+
+        x: x,
+
+        y: y,
+
+        text: text,
+
         life: 50
+
     });
+
 }
 
 
@@ -166,49 +231,65 @@ function createEffect(x, y, text) {
 function showStartScreen() {
 
     const oldScreen =
-        document.getElementById("startScreen");
+        document.getElementById(
+            "startScreen"
+        );
+
 
     if (oldScreen) {
         oldScreen.remove();
     }
 
+
     const screen =
         document.createElement("div");
 
+
     screen.id = "startScreen";
 
+
     screen.innerHTML = `
+
         <div class="start-box">
 
             <div class="start-emoji">
                 🥚 💣
             </div>
 
-            <h2>Egg Catcher Battle</h2>
+            <h2>
+                Egg Catcher Battle
+            </h2>
 
-            <p>🧺 Catch the eggs!</p>
+            <p>
+                🧺 Catch the eggs!
+            </p>
 
-            <p>💣 Avoid the bombs!</p>
+            <p>
+                💣 Avoid the bombs!
+            </p>
 
-            <p>❤️ You have 3 lives</p>
+            <p>
+                ❤️ You have 3 lives
+            </p>
 
             <button id="startGame">
                 ▶ START GAME
             </button>
 
         </div>
+
     `;
+
 
     document.body.appendChild(screen);
 
 
     document
         .getElementById("startGame")
-        .addEventListener("click", () => {
-
-            startGame();
-
-        });
+        .addEventListener(
+            "click",
+            startGame
+        );
 
 }
 
@@ -223,6 +304,7 @@ function startGame() {
 
     gameOver = false;
 
+
     score = 0;
 
     lives = 3;
@@ -230,6 +312,14 @@ function startGame() {
     fallSpeed = 3;
 
     spawnTime = 900;
+
+
+    // IMPORTANT:
+    // Difficulty will increase at 20,
+    // then 40, then 60, etc.
+
+    nextDifficultyScore = 20;
+
 
     objects = [];
 
@@ -241,11 +331,15 @@ function startGame() {
 
     flash = 0;
 
+
     player.x = 150;
 
 
     const startScreen =
-        document.getElementById("startScreen");
+        document.getElementById(
+            "startScreen"
+        );
+
 
     if (startScreen) {
         startScreen.remove();
@@ -260,71 +354,127 @@ function startGame() {
 
 
 // =====================================================
-// UPDATE
+// UPDATE GAME
 // =====================================================
 
 function update() {
 
-    if (!gameStarted || gameOver) return;
+    if (!gameStarted || gameOver) {
+        return;
+    }
 
 
-    // Player movement
+    // =================================================
+    // PLAYER MOVEMENT
+    // =================================================
 
     if (keys["ArrowLeft"]) {
+
         player.x -= player.speed;
+
     }
+
 
     if (keys["ArrowRight"]) {
+
         player.x += player.speed;
+
     }
 
 
-    // Boundaries
+    // Keep player inside canvas
 
     if (player.x < 0) {
+
         player.x = 0;
-    }
 
-    if (player.x + player.width > canvas.width) {
-        player.x = canvas.width - player.width;
     }
 
 
-    // Basket
+    if (
+        player.x + player.width >
+        canvas.width
+    ) {
+
+        player.x =
+            canvas.width -
+            player.width;
+
+    }
+
+
+    // =================================================
+    // BASKET POSITION
+    // =================================================
 
     const basket = {
+
         x: player.x + 10,
+
         y: player.y - 20,
+
         width: 80,
+
         height: 30
+
     };
 
 
-    // Falling objects
+    // =================================================
+    // FALLING OBJECTS
+    // =================================================
 
     objects.forEach(obj => {
 
         obj.y += fallSpeed;
 
 
-        // Catch
+        // ---------------------------------------------
+        // COLLISION WITH BASKET
+        // ---------------------------------------------
 
         if (
-            obj.x < basket.x + basket.width &&
-            obj.x + obj.size > basket.x &&
-            obj.y < basket.y + basket.height &&
-            obj.y + obj.size > basket.y
+
+            obj.x <
+                basket.x +
+                basket.width
+
+            &&
+
+            obj.x +
+                obj.size >
+                basket.x
+
+            &&
+
+            obj.y <
+                basket.y +
+                basket.height
+
+            &&
+
+            obj.y +
+                obj.size >
+                basket.y
+
         ) {
 
-            // Egg
+
+            // -----------------------------------------
+            // EGG CAUGHT
+            // -----------------------------------------
 
             if (obj.type === "egg") {
 
                 score++;
 
+
                 eggSound.currentTime = 0;
 
-                eggSound.play().catch(() => {});
+                eggSound
+                    .play()
+                    .catch(() => {});
+
 
                 createEffect(
                     obj.x,
@@ -335,7 +485,9 @@ function update() {
             }
 
 
-            // Bomb
+            // -----------------------------------------
+            // BOMB CAUGHT
+            // -----------------------------------------
 
             if (obj.type === "bomb") {
 
@@ -344,6 +496,7 @@ function update() {
                 shake = 15;
 
                 flash = 10;
+
 
                 createEffect(
                     obj.x,
@@ -359,9 +512,15 @@ function update() {
         }
 
 
-        // Missed
+        // =================================================
+        // OBJECT MISSED BOTTOM
+        // =================================================
 
-        if (obj.y > canvas.height) {
+        if (
+            obj.y > canvas.height
+        ) {
+
+            // Missing an egg costs a life
 
             if (obj.type === "egg") {
 
@@ -373,6 +532,9 @@ function update() {
 
             }
 
+
+            // Missing a bomb does nothing
+
             obj.caught = true;
 
         }
@@ -380,73 +542,124 @@ function update() {
     });
 
 
+    // Remove caught/missed objects
+
     objects =
-        objects.filter(obj => !obj.caught);
+        objects.filter(
+            obj => !obj.caught
+        );
 
 
-    // Difficulty
+    // =================================================
+    // FALL SPEED
+    // =================================================
 
     fallSpeed =
-        3 + score * 0.12;
+        3 +
+        score * 0.12;
 
+
+    // =================================================
+    // DIFFICULTY INCREASE
+    // =================================================
+
+    // IMPORTANT FIX:
+    //
+    // The difficulty increases ONLY ONCE when
+    // the player reaches 20, 40, 60, etc.
+    //
+    // It no longer repeatedly resets the timer
+    // every frame.
 
     if (
-        score > 0 &&
-        score % 20 === 0
+        score >= nextDifficultyScore
     ) {
-
-        clearInterval(spawnTimer);
 
         spawnTime -= 100;
 
+
+        // Minimum spawn time
+
         if (spawnTime < 300) {
+
             spawnTime = 300;
+
         }
+
+
+        // Move to the next difficulty level
+
+        nextDifficultyScore += 20;
+
+
+        // Restart the spawning timer ONCE
 
         startSpawning();
 
     }
 
 
-    // Particles
+    // =================================================
+    // PARTICLES
+    // =================================================
 
     particles.forEach(p => {
 
         p.x += p.speedX;
+
         p.y += p.speedY;
+
         p.life--;
 
     });
 
+
     particles =
-        particles.filter(p => p.life > 0);
+        particles.filter(
+            p => p.life > 0
+        );
 
 
-    // Text
+    // =================================================
+    // FLOATING TEXT
+    // =================================================
 
     texts.forEach(t => {
 
         t.y -= 1;
+
         t.life--;
 
     });
 
+
     texts =
-        texts.filter(t => t.life > 0);
+        texts.filter(
+            t => t.life > 0
+        );
 
 
-    // Effects
+    // =================================================
+    // SCREEN EFFECTS
+    // =================================================
 
     if (shake > 0) {
+
         shake--;
+
     }
+
 
     if (flash > 0) {
+
         flash--;
+
     }
 
 
-    // Game over
+    // =================================================
+    // GAME OVER
+    // =================================================
 
     if (lives <= 0) {
 
@@ -463,15 +676,25 @@ function update() {
 
 function endGame() {
 
-    if (gameOver) return;
+    if (gameOver) {
+        return;
+    }
+
 
     gameOver = true;
 
-    clearInterval(spawnTimer);
+
+    clearInterval(
+        spawnTimer
+    );
+
 
     gameOverSound.currentTime = 0;
 
-    gameOverSound.play().catch(() => {});
+    gameOverSound
+        .play()
+        .catch(() => {});
+
 
     showGameOverPanel();
 
@@ -479,12 +702,20 @@ function endGame() {
 
 
 // =====================================================
-// DRAW
+// DRAW GAME
 // =====================================================
 
 function draw() {
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+    );
+
 
     ctx.clearRect(
         0,
@@ -494,19 +725,26 @@ function draw() {
     );
 
 
-    // Shake
+    // =================================================
+    // SCREEN SHAKE
+    // =================================================
 
     if (shake > 0) {
 
         ctx.translate(
+
             Math.random() * 10 - 5,
+
             Math.random() * 10 - 5
+
         );
 
     }
 
 
-    // Score
+    // =================================================
+    // SCORE
+    // =================================================
 
     ctx.fillStyle = "black";
 
@@ -519,7 +757,9 @@ function draw() {
     );
 
 
-    // Lives
+    // =================================================
+    // LIVES
+    // =================================================
 
     ctx.fillText(
         "❤️ " + lives,
@@ -528,22 +768,33 @@ function draw() {
     );
 
 
-    // Objects
+    // =================================================
+    // FALLING OBJECTS
+    // =================================================
 
     objects.forEach(obj => {
 
         ctx.font = "40px Arial";
 
+
         ctx.fillText(
-            obj.type === "egg" ? "🥚" : "💣",
+
+            obj.type === "egg"
+                ? "🥚"
+                : "💣",
+
             obj.x,
+
             obj.y
+
         );
 
     });
 
 
-    // Basket
+    // =================================================
+    // BASKET
+    // =================================================
 
     ctx.font = "50px Arial";
 
@@ -554,22 +805,32 @@ function draw() {
     );
 
 
-    // Friend
+    // =================================================
+    // FRIEND IMAGE
+    // =================================================
 
     if (friend.complete) {
 
         ctx.drawImage(
+
             friend,
+
             player.x,
+
             player.y,
+
             player.width,
+
             player.height
+
         );
 
     }
 
 
-    // Particles
+    // =================================================
+    // PARTICLES
+    // =================================================
 
     particles.forEach(p => {
 
@@ -585,7 +846,9 @@ function draw() {
     });
 
 
-    // Floating text
+    // =================================================
+    // FLOATING TEXT
+    // =================================================
 
     texts.forEach(t => {
 
@@ -602,7 +865,9 @@ function draw() {
     });
 
 
-    // Damage flash
+    // =================================================
+    // DAMAGE FLASH
+    // =================================================
 
     if (flash > 0) {
 
@@ -638,7 +903,10 @@ function draw() {
 function showGameOverPanel() {
 
     const oldPanel =
-        document.getElementById("gameOverPanel");
+        document.getElementById(
+            "gameOverPanel"
+        );
+
 
     if (oldPanel) {
         oldPanel.remove();
@@ -648,18 +916,28 @@ function showGameOverPanel() {
     const panel =
         document.createElement("div");
 
+
     panel.id = "gameOverPanel";
+
 
     panel.innerHTML = `
 
         <div class="game-over-box">
 
-            <h2>💥 GAME OVER 💥</h2>
+            <h2>
+                💥 GAME OVER 💥
+            </h2>
 
             <p>
+
                 Score:
-                <strong>${score}</strong>
+
+                <strong>
+                    ${score}
+                </strong>
+
             </p>
+
 
             <input
                 id="playerName"
@@ -669,22 +947,31 @@ function showGameOverPanel() {
                 autocomplete="off"
             >
 
+
             <button id="saveScore">
+
                 💾 SAVE SCORE
+
             </button>
 
+
             <button id="retryGame">
+
                 🔄 RETRY
+
             </button>
 
         </div>
 
     `;
 
+
     document.body.appendChild(panel);
 
 
-    // Save score
+    // =================================================
+    // SAVE SCORE
+    // =================================================
 
     document
         .getElementById("saveScore")
@@ -696,6 +983,7 @@ function showGameOverPanel() {
                     document.getElementById(
                         "playerName"
                     );
+
 
                 const name =
                     input.value.trim();
@@ -719,6 +1007,7 @@ function showGameOverPanel() {
                         "saveScore"
                     );
 
+
                 button.disabled = true;
 
                 button.textContent =
@@ -732,15 +1021,22 @@ function showGameOverPanel() {
                         score
                     );
 
+
                     button.textContent =
                         "✅ SAVED";
 
                 }
+
                 catch (error) {
 
-                    console.error(error);
+                    console.error(
+                        error
+                    );
 
-                    button.disabled = false;
+
+                    button.disabled =
+                        false;
+
 
                     button.textContent =
                         "💾 SAVE SCORE";
@@ -751,7 +1047,9 @@ function showGameOverPanel() {
         );
 
 
-    // Retry
+    // =================================================
+    // RETRY
+    // =================================================
 
     document
         .getElementById("retryGame")
@@ -775,11 +1073,15 @@ function showGameOverPanel() {
 
 function restart() {
 
-    clearInterval(spawnTimer);
+    clearInterval(
+        spawnTimer
+    );
+
 
     gameStarted = false;
 
     gameOver = false;
+
 
     score = 0;
 
@@ -788,6 +1090,12 @@ function restart() {
     fallSpeed = 3;
 
     spawnTime = 900;
+
+
+    // Reset difficulty
+
+    nextDifficultyScore = 20;
+
 
     objects = [];
 
@@ -798,6 +1106,7 @@ function restart() {
     shake = 0;
 
     flash = 0;
+
 
     player.x = 150;
 
@@ -825,6 +1134,11 @@ const right =
 
 if (left && right) {
 
+
+    // =================================================
+    // LEFT TOUCH
+    // =================================================
+
     left.addEventListener(
         "touchstart",
         e => {
@@ -834,7 +1148,9 @@ if (left && right) {
             keys["ArrowLeft"] = true;
 
         },
-        { passive: false }
+        {
+            passive: false
+        }
     );
 
 
@@ -847,9 +1163,30 @@ if (left && right) {
             keys["ArrowLeft"] = false;
 
         },
-        { passive: false }
+        {
+            passive: false
+        }
     );
 
+
+    left.addEventListener(
+        "touchcancel",
+        e => {
+
+            e.preventDefault();
+
+            keys["ArrowLeft"] = false;
+
+        },
+        {
+            passive: false
+        }
+    );
+
+
+    // =================================================
+    // RIGHT TOUCH
+    // =================================================
 
     right.addEventListener(
         "touchstart",
@@ -860,7 +1197,9 @@ if (left && right) {
             keys["ArrowRight"] = true;
 
         },
-        { passive: false }
+        {
+            passive: false
+        }
     );
 
 
@@ -873,38 +1212,91 @@ if (left && right) {
             keys["ArrowRight"] = false;
 
         },
-        { passive: false }
-    );
-
-
-    // Mouse
-
-    left.addEventListener(
-        "mousedown",
-        () => {
-            keys["ArrowLeft"] = true;
-        }
-    );
-
-    left.addEventListener(
-        "mouseup",
-        () => {
-            keys["ArrowLeft"] = false;
+        {
+            passive: false
         }
     );
 
 
     right.addEventListener(
-        "mousedown",
-        () => {
-            keys["ArrowRight"] = true;
-        }
-    );
+        "touchcancel",
+        e => {
 
-    right.addEventListener(
-        "mouseup",
-        () => {
+            e.preventDefault();
+
             keys["ArrowRight"] = false;
+
+        },
+        {
+            passive: false
+        }
+    );
+
+
+    // =================================================
+    // LEFT MOUSE
+    // =================================================
+
+    left.addEventListener(
+        "mousedown",
+        () => {
+
+            keys["ArrowLeft"] = true;
+
+        }
+    );
+
+
+    left.addEventListener(
+        "mouseup",
+        () => {
+
+            keys["ArrowLeft"] = false;
+
+        }
+    );
+
+
+    left.addEventListener(
+        "mouseleave",
+        () => {
+
+            keys["ArrowLeft"] = false;
+
+        }
+    );
+
+
+    // =================================================
+    // RIGHT MOUSE
+    // =================================================
+
+    right.addEventListener(
+        "mousedown",
+        () => {
+
+            keys["ArrowRight"] = true;
+
+        }
+    );
+
+
+    right.addEventListener(
+        "mouseup",
+        () => {
+
+            keys["ArrowRight"] = false;
+
+        }
+    );
+
+
+    right.addEventListener(
+        "mouseleave",
+        () => {
+
+            keys["ArrowRight"] = false;
+
         }
     );
 
@@ -912,7 +1304,7 @@ if (left && right) {
 
 
 // =====================================================
-// LEADERBOARD
+// LOAD LEADERBOARD
 // =====================================================
 
 loadLeaderboard();
@@ -935,8 +1327,11 @@ function gameLoop() {
 
     draw();
 
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(
+        gameLoop
+    );
 
 }
+
 
 gameLoop();
