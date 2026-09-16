@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>🥚 Egg Catcher Battle 💣</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+    <h1>🥚 Egg Catcher Battle 💣</h1>
+
+
+    <!-- Game Canvas -->
+    <canvas id="game"></canvas>
+
+
+    <!-- Mobile Controls -->
+    <div class="buttons">
+
+        <button id="left" type="button">
+            ⬅
+        </button>
+
+        <button id="right" type="button">
+            ➡
+        </button>
+
+    </div>
+
+
+    <!-- Online Leaderboard -->
+    <div id="leaderboard">
+
+        <h2>🏆 TOP PLAYERS</h2>
+
+        <div id="leaderboardList">
+            Loading...
+        </div>
+
+    </div>
+
+
+    <!-- Game JavaScript -->
+    <!-- type="module" is required for Firebase -->
+    <script type="module" src="game.js"></script>
+
+</body>
+
+</html>
